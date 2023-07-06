@@ -25,23 +25,29 @@ class ThermalPlugin : FlutterPlugin {
             flutterPluginBinding.applicationContext.getSystemService(Context.POWER_SERVICE)
                     as PowerManager
         stateEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "thermal/events")
-        stateEventChannel.setStreamHandler(object : EventChannel.StreamHandler,
-            PowerManager.OnThermalStatusChangedListener {
-            private lateinit var sink: EventChannel.EventSink
 
-            override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
-                sink = events
-                powerManager.addThermalStatusListener(this)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            stateEventChannel.setStreamHandler(object : EventChannel.StreamHandler,
+                PowerManager.OnThermalStatusChangedListener {
+                private lateinit var sink: EventChannel.EventSink
 
-            override fun onCancel(arguments: Any?) {
-                powerManager.removeThermalStatusListener(this)
-            }
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                    sink = events
+                    powerManager.addThermalStatusListener(this)
+                }
 
-            override fun onThermalStatusChanged(status: Int) {
-                sink.success(status)
-            }
-        })
+                override fun onCancel(arguments: Any?) {
+                    powerManager.removeThermalStatusListener(this)
+                }
+
+                override fun onThermalStatusChanged(status: Int) {
+                    sink.success(status)
+                }
+            })
+        }else {
+            stateEventChannel.setStreamHandler(null);
+        }
+
         batteryTemperatureEventChannel =
             EventChannel(flutterPluginBinding.binaryMessenger, "thermal/battery_temp/events")
         batteryTemperatureEventChannel.setStreamHandler(object : EventChannel.StreamHandler,
