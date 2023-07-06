@@ -26,7 +26,7 @@ class ThermalPlugin : FlutterPlugin {
                     as PowerManager
         stateEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "thermal/events")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             stateEventChannel.setStreamHandler(object : EventChannel.StreamHandler,
                 PowerManager.OnThermalStatusChangedListener {
                 private lateinit var sink: EventChannel.EventSink
@@ -72,9 +72,14 @@ class ThermalPlugin : FlutterPlugin {
         })
         methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "thermal")
         methodChannel.setMethodCallHandler { call, result ->
-            when (call.method) {
-                "getThermalStatus" -> result.success(powerManager.currentThermalStatus)
-                else -> result.notImplemented()
+            if (call.method == "getThermalStatus") {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    result.success(powerManager.currentThermalStatus)
+                } else {
+                    result.success(0)
+                }
+            } else {
+                result.notImplemented()
             }
         }
     }
