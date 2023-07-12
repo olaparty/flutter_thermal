@@ -4,6 +4,7 @@ import UIKit
 @available(iOS 11.0, *)
 public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   var sink: FlutterEventSink?
+  @objc public static var canSendMsg = false
   
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     self.sink = events
@@ -17,6 +18,7 @@ public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
     self.sink = nil
+    NotificationCenter.default.removeObserver(self, name: ProcessInfo.thermalStateDidChangeNotification, object: nil)
     return nil
   }
   
@@ -46,8 +48,12 @@ public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   }
   
   @objc public func onThermalStateChanged() {
-    if let events = self.sink {
-      events(SwiftThermalPlugin.toChannelValue(state: ProcessInfo.processInfo.thermalState))
+    if let events = self.sink, SwiftThermalPlugin.canSendMsg {
+        do {
+            try events(SwiftThermalPlugin.toChannelValue(state: ProcessInfo.processInfo.thermalState))
+        } catch {
+            
+        }
     }
   }
   

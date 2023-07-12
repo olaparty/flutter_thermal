@@ -9,7 +9,14 @@
 #endif
 
 @implementation ThermalPlugin
+
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   [SwiftThermalPlugin registerWithRegistrar:registrar];
+  SwiftThermalPlugin.canSendMsg = YES;
 }
+
+- (void)detachFromEngineForRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+  SwiftThermalPlugin.canSendMsg = NO;
+}
+
 @end
