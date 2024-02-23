@@ -5,6 +5,8 @@ import UIKit
 public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   var sink: FlutterEventSink?
   @objc public static var canSendMsg = false
+    @objc public static var isForeground = false
+
   
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     self.sink = events
@@ -48,12 +50,8 @@ public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   }
   
   @objc public func onThermalStateChanged() {
-    if let events = self.sink, SwiftThermalPlugin.canSendMsg {
-        do {
-            try events(SwiftThermalPlugin.toChannelValue(state: ProcessInfo.processInfo.thermalState))
-        } catch {
-            
-        }
+    if let events = self.sink, SwiftThermalPlugin.canSendMsg, SwiftThermalPlugin.isForeground {
+        events(SwiftThermalPlugin.toChannelValue(state: ProcessInfo.processInfo.thermalState))
     }
   }
   
@@ -63,5 +61,20 @@ public class SwiftThermalPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     let instance = SwiftThermalPlugin()
     eventChannel.setStreamHandler(instance)
     registrar.addMethodCallDelegate(instance, channel: methodChannel)
+      registrar.addApplicationDelegate(instance)
   }
+    
+    // MARK: - ApplicationDelegate
+    
+    public func applicationDidBecomeActive(_ application: UIApplication) {
+        SwiftThermalPlugin.isForeground = true
+    }
+    
+    public func applicationWillEnterForeground(_ application: UIApplication) {
+        SwiftThermalPlugin.isForeground = true
+    }
+    
+    public func applicationDidEnterBackground(_ application: UIApplication) {
+        SwiftThermalPlugin.isForeground = false
+    }
 }
