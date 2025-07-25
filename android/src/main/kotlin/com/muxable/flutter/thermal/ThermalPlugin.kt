@@ -56,10 +56,18 @@ class ThermalPlugin : FlutterPlugin {
 
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                 sink = events
-                flutterPluginBinding.applicationContext.registerReceiver(
-                    this,
-                    IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    flutterPluginBinding.applicationContext.registerReceiver(
+                        this,
+                        IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+                        Context.RECEIVER_EXPORTED,
+                    )
+                } else {
+                    flutterPluginBinding.applicationContext.registerReceiver(
+                        this,
+                        IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+                    )
+                }
             }
 
             override fun onCancel(arguments: Any?) {
